@@ -38,7 +38,26 @@ OPENSSL_s390x_facilities:
 	stg	%r0,S390X_STFLE+8(%r4)	# wipe capability vectors
 	stg	%r0,S390X_STFLE+16(%r4)
 	stg	%r0,S390X_STFLE+24(%r4)
-	stg	%r0,S390X_KIMD(%r4)
+
+	.long	0xb2b04000		# stfle	0(%r4)
+	brc	8,.Ldone
+	lghi	%r0,1
+	.long	0xb2b04000		# stfle 0(%r4)
+	brc	8,.Ldone
+	lghi	%r0,2
+	.long	0xb2b04000		# stfle 0(%r4)
+.Ldone:
+	br	$ra
+.size	OPENSSL_s390x_facilities,.-OPENSSL_s390x_facilities
+
+.globl	OPENSSL_s390x_functions
+.type	OPENSSL_s390x_functions,\@function
+.align	16
+OPENSSL_s390x_functions:
+	lghi	%r0,0
+	larl	%r4,OPENSSL_s390xcap_P
+
+	stg	%r0,S390X_KIMD(%r4)	# wipe capability vectors
 	stg	%r0,S390X_KIMD+8(%r4)
 	stg	%r0,S390X_KLMD(%r4)
 	stg	%r0,S390X_KLMD+8(%r4)
@@ -63,14 +82,6 @@ OPENSSL_s390x_facilities:
 	stg	%r0,S390X_KDSA(%r4)
 	stg	%r0,S390X_KDSA+8(%r4)
 
-	.long	0xb2b04000		# stfle	0(%r4)
-	brc	8,.Ldone
-	lghi	%r0,1
-	.long	0xb2b04000		# stfle 0(%r4)
-	brc	8,.Ldone
-	lghi	%r0,2
-	.long	0xb2b04000		# stfle 0(%r4)
-.Ldone:
 	lmg	%r2,%r3,S390X_STFLE(%r4)
 
 	tmhl	%r2,0x4000		# check for message-security-assist
@@ -143,7 +154,7 @@ OPENSSL_s390x_facilities:
 
 .Lret:
 	br	$ra
-.size	OPENSSL_s390x_facilities,.-OPENSSL_s390x_facilities
+.size	OPENSSL_s390x_functions,.-OPENSSL_s390x_functions
 
 .globl	OPENSSL_rdtsc
 .type	OPENSSL_rdtsc,\@function
